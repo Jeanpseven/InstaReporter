@@ -1,102 +1,83 @@
 import time
-from webbot import *
+from webbot import Browser
 import pyautogui
-
 import argparse
 import sys
+from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.firefox import GeckoDriverManager
+import requests
 
-# Para analisar os argumentos
-def obterOpcoes(args=sys.argv[1:]):
+# Função para verificar se uma conta existe
+def verificar_conta_existe(conta):
+    url = f"https://www.instagram.com/{conta}/"
+    response = requests.get(url)
+    return response.status_code == 200
 
-    parser = argparse.ArgumentParser(description="Este bot ajuda os usuários a denunciar em massa contas com iscas de clique ou conteúdo objetável no Instagram.")
-    parser.add_argument("-u", "--usuario", type=str, default="", help="Nome de usuário para denunciar.")
-    parser.add_argument("-f", "--arquivo", type=str, default="contas.txt", help="Lista de contas (Padrão é contas.txt no diretório do programa).")
+def configurar():
+    navegador = input("Digite o navegador a ser utilizado (chrome ou firefox): ").strip().lower()
+    if navegador == "chrome":
+        driver_path = ChromeDriverManager().install()
+    elif navegador == "firefox":
+        driver_path = GeckoDriverManager().install()
+    else:
+        print("Navegador não suportado. Use 'chrome' ou 'firefox'.")
+        sys.exit(1)
 
-    opcoes = parser.parse_args(args)
+    web = Browser(webdriver=navegador, driverpath=driver_path)
+    return web
 
-    return opcoes
-
-# Verifica se a opção de ajuda foi fornecida
-if "-h" in sys.argv or "--help" in sys.argv:
-    print("Este script ajuda a denunciar em massa contas com iscas de clique ou conteúdo objetável no Instagram.")
-    print("Opções disponíveis:")
-    print("-u, --usuario: Nome de usuário para denunciar (obrigatório).")
-    print("-f, --arquivo: Nome do arquivo de contas (padrão é 'contas.txt' no diretório do programa).")
-    sys.exit(0)
-
-args = obterOpcoes()
-
-usuario = args.usuario
-arquivo_contas = args.arquivo
-
-if usuario == "":
-    usuario = input("Nome de usuário: ")
-
-print("Certifique-se de que o arquivo contas.txt contenha credenciais de conta no seguinte formato:")
-print("nome_de_usuário:senha")
-
-a = open(arquivo_contas, "r").readlines()
-linhas = [s.rstrip() for s in a]
-linhas.reverse()
-
-usuarios = []
-senhas = []
-for linha in linhas:
-    partes = linha.split(":")
-    nome_usuario = partes[0]
-    senha = partes[1]
-    usuarios.append(nome_usuario)
-    senhas.append(senha)
-
-while True:  # Loop infinito para denunciar em loop
-    for indice in range(len(linhas) + 1):
-        web = Browser()
+# Função para denunciar contas
+def denunciar_contas(web, denunciantes, contas):
+    for denunciante in denunciantes:
         web.go_to("https://www.instagram.com/accounts/login/")
-
-        web.type(usuarios[indice], into='Número de telefone, nome de usuário ou email')
-        time.sleep(0.5)
+        web.type(denunciante["usuario"], into="Número de telefone, nome de usuário ou email")
         web.press(web.Key.TAB)
-        time.sleep(0.5)
-        web.type(senhas[indice], into='Senha')
+        time.sleep(1)
+        senha = denunciante["senha"]
+        web.type(senha, into="Senha")
         web.press(web.Key.ENTER)
+        time.sleep(3)
 
-        time.sleep(2.0)
+        for conta in contas:
+            # Função para denunciar uma conta
+            def denunciar_conta(conta):
+                if verificar_conta_existe(conta):
+                    web.go_to(f"https://www.instagram.com/{conta}/")
+                    time.sleep(2)
+                    web.click(xpath='//*[@id="react-root"]/section/main/div/header/section/div[1]/div/button')
+                    time.sleep(2)
+                    web.click(text="Denunciar Usuário")
+                    time.sleep(2)
+                    web.click(xpath="/html/body/div[4]/div/div/div/div[2]/div/div/div/div[3]/button[1]")
+                    time.sleep(2)
+                    web.click(text="Fechar")
+                    time.sleep(2)
+                else:
+                    print(f"A conta {conta} não existe. Ignorando a denúncia.")
 
-        web.go_to("https://www.instagram.com/%s/" % usuario)
+            denunciar_conta(conta)
 
-        time.sleep(1.5)
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Este bot ajuda os usuários a denunciar em massa contas com iscas de clique ou conteúdo objetável no Instagram.")
+    parser.add_argument("-f", "--arquivo", type=str, default="contas.txt", help="Lista de contas (Padrão é 'contas.txt' no diretório do programa).")
 
-        web.click(xpath='//*[@id="react-root"]/section/main/div/header/section/div[1]/div/button')
+    opcoes = parser.parse_args()
+    arquivo_contas = opcoes.arquivo
 
-        time.sleep(0.5)
+    denunciantes = []
+    quantidade_denunciantes = int(input("Quantidade de perfis denunciantes (padrão é 1): ") or 1)
+    for i in range(quantidade_denunciantes):
+        usuario = input(f"Nome de usuário do perfil denunciante {i + 1}: ").strip()
+        senha = input(f"Senha do perfil denunciante {i + 1}: ").strip()
+        denunciantes.append({"usuario": usuario, "senha": senha})
 
-        web.click(text='Denunciar Usuário')
+    web = configurar()
+    contas = []
 
-        time.sleep(1.5)
+    quantidade_contas = int(input("Quantidade de contas a denunciar (padrão é 1): ") or 1)
+    for i in range(quantidade_contas):
+        nome_usuario = input(f"Nome de usuário da conta {i + 1}: ").strip()
+        contas.append(nome_usuario)
 
-        web.click(xpath="/html/body/div[4]/div/div/div/div[2]/div/div/div/div[3]/button[1]")
-
-        time.sleep(0.5)
-
-        web.click(text='Fechar')
-
-        time.sleep(0.5)
-
-        web.click(xpath='/html/body/div[1]/section/nav/div[2]/div/div/div[3]/div/div[3]/a')
-
-        time.sleep(0.5)
-
-        web.click(xpath='/html/body/div[1]/section/main/div/header/section/div[1]/div/button')
-
-        time.sleep(0.5)
-
-        web.click(text='Sair')
-
-        time.sleep(0.5)
-
-        pyautogui.keyDown('ctrl')
-        time.sleep(0.25)
-        pyautogui.keyDown('w')
-        time.sleep(0.5)
-        pyautogui.keyUp('ctrl')
-        pyautogui.keyUp('w')
+    # Execute a função de denunciar contas
+    denunciar_contas(web, denunciantes, contas)
