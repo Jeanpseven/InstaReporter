@@ -8,7 +8,7 @@ import sys
 # Para analisar os argumentos
 def obterOpcoes(args=sys.argv[1:]):
 
-    parser = argparse.ArgumentParser(description="Este bot ajuda os usuários a denunciar em massa contas com iscas de clique ou conteúdo objetável.")
+    parser = argparse.ArgumentParser(description="Este bot ajuda os usuários a denunciar em massa contas com iscas de clique ou conteúdo objetável no Instagram.")
     parser.add_argument("-u", "--usuario", type=str, default="", help="Nome de usuário para denunciar.")
     parser.add_argument("-f", "--arquivo", type=str, default="contas.txt", help="Lista de contas (Padrão é contas.txt no diretório do programa).")
 
@@ -48,54 +48,55 @@ for linha in linhas:
     usuarios.append(nome_usuario)
     senhas.append(senha)
 
-for indice in range(len(linhas) + 1):
-    web = Browser()
-    web.go_to("https://www.instagram.com/accounts/login/")
+while True:  # Loop infinito para denunciar em loop
+    for indice in range(len(linhas) + 1):
+        web = Browser()
+        web.go_to("https://www.instagram.com/accounts/login/")
 
-    web.type(usuarios[indice], into='Número de telefone, nome de usuário ou email')
-    time.sleep(0.5)
-    web.press(web.Key.TAB)
-    time.sleep(0.5)
-    web.type(senhas[indice], into='Senha')
-    web.press(web.Key.ENTER)
+        web.type(usuarios[indice], into='Número de telefone, nome de usuário ou email')
+        time.sleep(0.5)
+        web.press(web.Key.TAB)
+        time.sleep(0.5)
+        web.type(senhas[indice], into='Senha')
+        web.press(web.Key.ENTER)
 
-    time.sleep(2.0)
+        time.sleep(2.0)
 
-    web.go_to("https://www.instagram.com/%s/" % usuario)
+        web.go_to("https://www.instagram.com/%s/" % usuario)
 
-    time.sleep(1.5)
+        time.sleep(1.5)
 
-    web.click(xpath='//*[@id="react-root"]/section/main/div/header/section/div[1]/div/button')
+        web.click(xpath='//*[@id="react-root"]/section/main/div/header/section/div[1]/div/button')
 
-    time.sleep(0.5)
+        time.sleep(0.5)
 
-    web.click(text='Denunciar Usuário')
+        web.click(text='Denunciar Usuário')
 
-    time.sleep(1.5)
+        time.sleep(1.5)
 
-    web.click(xpath="/html/body/div[4]/div/div/div/div[2]/div/div/div/div[3]/button[1]")
+        web.click(xpath="/html/body/div[4]/div/div/div/div[2]/div/div/div/div[3]/button[1]")
 
-    time.sleep(0.5)
+        time.sleep(0.5)
 
-    web.click(text='Fechar')
+        web.click(text='Fechar')
 
-    time.sleep(0.5)
+        time.sleep(0.5)
 
-    web.click(xpath='/html/body/div[1]/section/nav/div[2]/div/div/div[3]/div/div[3]/a')
+        web.click(xpath='/html/body/div[1]/section/nav/div[2]/div/div/div[3]/div/div[3]/a')
 
-    time.sleep(0.5)
+        time.sleep(0.5)
 
-    web.click(xpath='/html/body/div[1]/section/main/div/header/section/div[1]/div/button')
+        web.click(xpath='/html/body/div[1]/section/main/div/header/section/div[1]/div/button')
 
-    time.sleep(0.5)
+        time.sleep(0.5)
 
-    web.click(text='Sair')
+        web.click(text='Sair')
 
-    time.sleep(0.5)
+        time.sleep(0.5)
 
-    pyautogui.keyDown('ctrl')
-    time.sleep(0.25)
-    pyautogui.keyDown('w')
-    time.sleep(0.5)
-    pyautogui.keyUp('ctrl')
-    pyautogui.keyUp('w')
+        pyautogui.keyDown('ctrl')
+        time.sleep(0.25)
+        pyautogui.keyDown('w')
+        time.sleep(0.5)
+        pyautogui.keyUp('ctrl')
+        pyautogui.keyUp('w')
